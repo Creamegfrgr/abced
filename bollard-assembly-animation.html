@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>液压升降防撞柱装配动画展示</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 2.2em;
+        }
+        
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 1.1em;
+        }
+        
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .animation-area {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        #assembly-canvas {
+            width: 100%;
+            height: 500px;
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            width: 100%;
+        }
+        
+        .control-btn {
+            padding: 10px 20px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .control-btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        .control-btn:active {
+            transform: translateY(0);
+        }
+        
+        .control-btn.reset {
+            background: #e74c3c;
+        }
+        
+        .control-btn.reset:hover {
+            background: #c0392b;
+        }
+        
+        .info-panel {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .part-list {
+            margin-bottom: 25px;
+        }
+        
+        .part-item {
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            background: #f8f9fa;
+            border-left: 4px solid #3498db;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .part-item:hover {
+            background: #e8f4fc;
+            transform: translateX(5px);
+        }
+        
+        .part-item.active {
+            background: #d6eaf8;
+            border-left-color: #2c3e50;
+            font-weight: bold;
+        }
+        
+        .part-number {
+            display: inline-block;
+            width: 25px;
+            height: 25px;
+            background: #3498db;
+            color: white;
+            text-align: center;
+            line-height: 25px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .part-detail {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            margin-top: 15px;
+        }
+        
+        .part-detail h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #3498db;
+        }
+        
+        .assembly-steps {
+            margin-top: 25px;
+        }
+        
+        .step {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        
+        .step-number {
+            width: 30px;
+            height: 30px;
+            background: #2c3e50;
+            color: white;
+            text-align: center;
+            line-height: 30px;
+            border-radius: 50%;
+            margin-right: 15px;
+            font-weight: bold;
+        }
+        
+        .step-content {
+            flex: 1;
+        }
+        
+        .current-step {
+            background: #d6eaf8;
+            border: 2px solid #3498db;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            #assembly-canvas {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>液压升降防撞柱装配动画展示</h1>
+            <p class="subtitle">交互式3D爆炸图 - 可视化组装过程</p>
+        </header>
+        
+        <div class="main-content">
+            <div class="animation-area">
+                <svg id="assembly-canvas" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600"></svg>
+                
+                <div class="controls">
+                    <button class="control-btn" id="prev-btn">上一步</button>
+                    <button class="control-btn" id="next-btn">下一步</button>
+                    <button class="control-btn" id="play-btn">播放动画</button>
+                    <button class="control-btn reset" id="reset-btn">重置</button>
+                    <button class="control-btn" id="explode-btn">爆炸视图</button>
+                </div>
+                
+                <div style="margin-top: 15px; text-align: center;">
+                    <label for="speed-control">动画速度: </label>
+                    <input type="range" id="speed-control" min="1" max="10" value="5" style="width: 150px;">
+                    <span id="speed-value">中速</span>
+                </div>
+            </div>
+            
+            <div class="info-panel">
+                <div class="part-list">
+                    <h2>部件列表</h2>
+                    <div class="part-item active" data-part="1">
+                        <span class="part-number">1</span>
+                        <span>重型钢顶盖</span>
+                    </div>
+                    <div class="part-item" data-part="2">
+                        <span class="part-number">2</span>
+                        <span>橡胶缓冲垫</span>
+                    </div>
+                    <div class="part-item" data-part="3">
+                        <span class="part-number">3</span>
+                        <span>柱体外壳</span>
+                    </div>
+                    <div class="part-item" data-part="4">
+                        <span class="part-number">4</span>
+                        <span>液压驱动总成</span>
+                    </div>
+                    <div class="part-item" data-part="5">
+                        <span class="part-number">5</span>
+                        <span>安装法兰</span>
+                    </div>
+                    <div class="part-item" data-part="6">
+                        <span class="part-number">6</span>
+                        <span>钢筋混凝土基础</span>
+                    </div>
+                </div>
+                
+                <div class="part-detail">
+                    <h3 id="current-part-name">重型钢顶盖</h3>
+                    <p id="current-part-desc">镀锌钢防护罩，保护内部机构免受天气影响和物理损坏。顶部带有维护检修口。</p>
+                    <p><strong>材质:</strong> <span id="current-part-material">高强度镀锌钢</span></p>
+                    <p><strong>功能:</strong> <span id="current-part-function">防护与密封</span></p>
+                </div>
+                
+                <div class="assembly-steps">
+                    <h2>装配步骤</h2>
+                    <div class="step current-step" data-step="1">
+                        <div class="step-number">1</div>
+                        <div class="step-content">准备钢筋混凝土基础，预埋安装螺栓</div>
+                    </div>
+                    <div class="step" data-step="2">
+                        <div class="step-number">2</div>
+                        <div class="step-content">安装法兰固定在混凝土基础上</div>
+                    </div>
+                    <div class="step" data-step="3">
+                        <div class="step-number">3</div>
+                        <div class="step-content">安装液压驱动总成到法兰上</div>
+                    </div>
+                    <div class="step" data-step="4">
+                        <div class="step-number">4</div>
+                        <div class="step-content">将柱体外壳套在液压总成外部</div>
+                    </div>
+                    <div class="step" data-step="5">
+                        <div class="step-number">5</div>
+                        <div class="step-content">安装橡胶缓冲垫到柱体顶部</div>
+                    </div>
+                    <div class="step" data-step="6">
+                        <div class="step-number">6</div>
+                        <div class="step-content">安装重型钢顶盖，完成装配</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>液压升降防撞柱装配动画展示 | 工程可视化系统 | 版权所有 © 2023</p>
+            <p>本动画展示了防撞柱的完整装配过程，点击部件可查看详细信息</p>
+        </footer>
+    </div>
+
+    <script>
+        // 部件数据
+        const partsData = {
+            1: {
+                name: "重型钢顶盖",
+                desc: "镀锌钢防护罩，保护内部机构免受天气影响和物理损坏。顶部带有维护检修口，采用穹顶设计便于排水。",
+                material: "高强度镀锌钢 (3-5mm厚度)",
+                function: "防护、密封、维护访问",
+                color: "#c0c0c0"
+            },
+            2: {
+                name: "橡胶缓冲垫",
+                desc: "高密度弹性体能量吸收器，在碰撞时通过形变吸收冲击能量，保护车辆和柱体结构。",
+                material: "高密度聚氨酯橡胶 (邵氏硬度 70-80A)",
+                function: "能量吸收、缓冲减震",
+                color: "#000000"
+            },
+            3: {
+                name: "柱体外壳",
+                desc: "主体结构件，提供结构支撑并保护内部液压系统。表面采用防腐蚀涂层处理。",
+                material: "结构钢 (Q235B/C型钢)",
+                function: "结构支撑、内部防护",
+                color: "#a0a0a0"
+            },
+            4: {
+                name: "液压驱动总成",
+                desc: "核心升降机构，包含液压缸、活塞杆、控制阀和液压管路，提供升降动力。",
+                material: "合金钢液压缸 + 铜制管路",
+                function: "提供升降动力、控制位置",
+                color: "#d0d0d0"
+            },
+            5: {
+                name: "安装法兰",
+                desc: "连接基础与柱体的关键部件，通过高强度螺栓将柱体固定在混凝土基础上。",
+                material: "中碳钢锻件 (45#钢)",
+                function: "连接固定、载荷传递",
+                color: "#b0b0b0"
+            },
+            6: {
+                name: "钢筋混凝土基础",
+                desc: "整个系统的锚固基础，提供足够的质量和强度以抵抗冲击载荷。",
+                material: "C40混凝土 + HRB400钢筋",
+                function: "锚固、承载、分散载荷",
+                color: "#e0e0e0"
+            }
+        };
+
+        // 装配状态
+        let currentStep = 1;
+        let isAnimating = false;
+        let isExploded = false;
+        let animationSpeed = 5;
+        
+        // 获取DOM元素
+        const canvas = document.getElementById('assembly-canvas');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const playBtn = document.getElementById('play-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const explodeBtn = document.getElementById('explode-btn');
+        const speedControl = document.getElementById('speed-control');
+        const speedValue = document.getElementById('speed-value');
+        const partItems = document.querySelectorAll('.part-item');
+        const steps = document.querySelectorAll('.step');
+        
+        // 初始化SVG
+        function initSVG() {
+            // 清空画布
+            canvas.innerHTML = '';
+            
+            // 添加背景网格
+            addGrid();
+            
+            // 添加标题
+            const title = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            title.setAttribute("x", "400");
+            title.setAttribute("y", "40");
+            title.setAttribute("text-anchor", "middle");
+            title.setAttribute("font-size", "20");
+            title.setAttribute("font-weight", "bold");
+            title.setAttribute("fill", "#2c3e50");
+            title.textContent = "液压升降防撞柱 - 装配过程";
+            canvas.appendChild(title);
+            
+            // 添加装配状态指示
+            const stateText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            stateText.setAttribute("x", "400");
+            stateText.setAttribute("y", "70");
+            stateText.setAttribute("text-anchor", "middle");
+            stateText.setAttribute("font-size", "16");
+            stateText.setAttribute("fill", "#7f8c8d");
+            stateText.setAttribute("id", "state-text");
+            stateText.textContent = "准备开始装配...";
+            canvas.appendChild(stateText);
+            
+            // 绘制所有部件（初始状态为分离）
+            drawAllParts();
+            
+            // 更新状态显示
+            updateStateText();
+        }
+        
+        // 添加背景网格
+        function addGrid() {
+            const gridGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            gridGroup.setAttribute("id", "grid");
+            gridGroup.setAttribute("opacity", "0.1");
+            
+            // 水平线
+            for (let y = 100; y <= 500; y += 20) {
+                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                line.setAttribute("x1", "100");
+                line.setAttribute("y1", y.toString());
+                line.setAttribute("x2", "700");
+                line.setAttribute("y2", y.toString());
+                line.setAttribute("stroke", "#7f8c8d");
+                line.setAttribute("stroke-width", "0.5");
+                gridGroup.appendChild(line);
+            }
+            
+            // 垂直线
+            for (let x = 100; x <= 700; x += 20) {
+                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                line.setAttribute("x1", x.toString());
+                line.setAttribute("y1", "100");
+                line.setAttribute("x2", x.toString());
+                line.setAttribute("y2", "500");
+                line.setAttribute("stroke", "#7f8c8d");
+                line.setAttribute("stroke-width", "0.5");
+                gridGroup.appendChild(line);
+            }
+            
+            canvas.appendChild(gridGroup);
+        }
+        
+        // 绘制所有部件
+        function drawAllParts() {
+            // 部件初始位置（爆炸状态）
+            const initialPositions = {
+                1: { x: 400, y: 100 },  // 顶盖
+                2: { x: 400, y: 150 },  // 缓冲垫
+                3: { x: 400, y: 220 },  // 外壳
+                4: { x: 400, y: 320 },  // 液压总成
+                5: { x: 400, y: 420 },  // 法兰
+                6: { x: 400, y: 520 }   // 基础
+            };
+            
+            // 部件组装后位置
+            const assembledPositions = {
+                1: { x: 400, y: 200 },  // 顶盖
+                2: { x: 400, y: 230 },  // 缓冲垫
+                3: { x: 400, y: 260 },  // 外壳
+                4: { x: 400, y: 320 },  // 液压总成
+                5: { x: 400, y: 400 },  // 法兰
+                6: { x: 400, y: 480 }   // 基础
+            };
+            
+            // 绘制每个部件
+            for (let i = 6; i >= 1; i--) {
+                const part = partsData[i];
+                const pos = isExploded ? initialPositions[i] : assembledPositions[i];
+                
+                // 创建部件组
+                const partGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                partGroup.setAttribute("id", `part-${i}`);
+                partGroup.setAttribute("class", "part");
+                partGroup.setAttribute("data-part", i);
+                
+                // 根据部件类型绘制不同形状
+                let partElement;
+                
+                switch(i) {
+                    case 1: // 顶盖
+                        partElement = drawTopCover(pos.x, pos.y, part.color);
+                        break;
+                    case 2: // 缓冲垫
+                        partElement = drawBufferPad(pos.x, pos.y, part.color);
+                        break;
+                    case 3: // 外壳
+                        partElement = drawCasing(pos.x, pos.y, part.color);
+                        break;
+                    case 4: // 液压总成
+                        partElement = drawHydraulicUnit(pos.x, pos.y, part.color);
+                        break;
+                    case 5: // 法兰
+                        partElement = drawFlange(pos.x, pos.y, part.color);
+                        break;
+                    case 6: // 基础
+                        partElement = drawFoundation(pos.x, pos.y, part.color);
+                        break;
+                }
+                
+                partGroup.appendChild(partElement);
+                
+                // 添加部件标签
+                const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                label.setAttribute("x", (pos.x + 80).toString());
+                label.setAttribute("y", (pos.y + 20).toString());
+                label.setAttribute("font-size", "14");
+                label.setAttribute("fill", "#2c3e50");
+                label.setAttribute("font-weight", "bold");
+                label.textContent = `${i}. ${part.name}`;
+                partGroup.appendChild(label);
+                
+                // 添加点击事件
+                partGroup.addEventListener('click', function() {
+                    selectPart(i);
+                });
+                
+                // 根据装配步骤设置部件显示状态
+                if (i <= currentStep) {
+                    partGroup.setAttribute("opacity", "1");
+                } else {
+                    partGroup.setAttribute("opacity", "0.3");
+                }
+                
+                canvas.appendChild(partGroup);
+            }
+        }
+        
+        // 绘制顶盖
+        function drawTopCover(x, y, color) {
+            const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            
+            // 顶盖主体
+            const cover = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            cover.setAttribute("x", (x - 40).toString());
+            cover.setAttribute("y", y.toString());
+            cover.setAttribute("width", "80");
+            cover.setAttribute("height", "30");
+            cover.setAttribute("fill", color);
+            cover.setAttribute("stroke", "#333");
+            cover.setAttribute("stroke-width", "2");
+            cover.setAttribute("rx", "5");
+            group.appendChild(cover);
+            
+            // 维护盖板
+            const accessPanel = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            accessPanel.setAttribute("x", (x - 20).toString());
+            accessPanel.setAttribute("y", (y + 5).toString());
+            accessPanel.setAttribute("width", "40");
+            accessPanel.setAttribute("height", "15");
+            accessPanel.setAttribute("fill", "#a0a0a0");
+            accessPanel.setAttribute("stroke", "#333");
+            accessPanel.setAttribute("stroke-width", "1");
+            accessPanel.setAttribute("rx", "3");
+            group.appendChild(accessPanel);
+            
+            return group;
+        }
+        
+        // 绘制缓冲垫
+        function drawBufferPad(x, y, color) {
+            const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            
+            // 缓冲垫主体
+            const pad = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            pad.setAttribute("x", (x - 35).toString());
+            pad.setAttribute("y", y.toString());
+            pad.setAttribute("width", "70");
+            pad.setAttribute("height", "25");
+            pad.setAttribute("fill", color);
+            pad.setAttribute("stroke", "#333");
+            pad.setAttribute("stroke-width", "2");
+            group.appendChild(pad);
+            
+            // 缓冲纹理
+            for (let i = 0; i < 5; i++) {
+                const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                circle.setAttribute("cx", (x - 25 + i * 12).toString());
+                circle.setAttribute("cy", (y + 12).toString());
+                circle.setAttribute("r", "4");
+                circle.setAttribute("fill", "#333");
+                group.appendChild(circle);
+            }
+            
+            return group;
+        }
+        
+        // 绘制外壳
+        function drawCasing(x, y, color) {
+            const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            
+            // 外壳主体
+            const casing = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            casing.setAttribute("x", (x - 50).toString());
+            casing.setAttribute("y", y.toString());
+            casing.setAttribute("width", "100");
+            casing.setAttribute("height", "80");
+            casing.setAttribute("fill", color);
+            casing.setAttribute("stroke", "#333");
+            casing.setAttribute("stroke-width", "3");
+            group.appendChild(casing);
+            
+            // 外壳厚度指示
+            const thickness = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            thickness.setAttribute("x1", (x - 50).toString());
+            thickness.setAttribute("y1", y.toString());
+            thickness.setAttribute("x2", (x - 60).toString());
+            thickness.setAttribute("y2", (y - 10).toString());
+            thickness.setAttribute("stroke", "#666");
+            thickness.setAttribute("stroke-width", "1");
+            group.appendChild(thickness);
+            
+            return group;
+        }
+        
+        // 绘制液压总成
+        function drawHydraulicUnit(x, y, color) {
+            const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            
+            // 液压缸主体
+            const cylinder = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            cylinder.setAttribute("x", (x - 30).toString());
+            cylinder.setAttribute("y", y.toString());
+            cylinder.setAttribute("width", "60");
+            cylinder.setAttribute("height", "60");
+            cylinder.setAttribute("fill", color);
+            cylinder.setAttribute("stroke", "#333");
+            cylinder.setAttribute("stroke-width", "2");
+            group.appendChild(cylinder);
+            
+            // 活塞杆
+            const piston = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            piston.setAttribute("x", (x - 10).toString());
+            piston.setAttribute("y", (y - 20).toString());
+            piston.setAttribute("width", "20");
+            piston.setAttribute("height", "80");
+            piston.setAttribute("fill", "#d0d0d0");
+            piston.setAttribute("stroke", "#333");
+            piston.setAttribute("stroke-width", "1.5");
+            group.appendChild(piston);
+            
+            // 液压管路
+            const hose1 = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            hose1.setAttribute("d", `M ${x+30} ${y+30} Q ${x+60} ${y+20} ${x+80} ${y+10}`);
+            hose1.setAttribute("fill", "none");
+            hose1.setAttribute("stroke", "#cc0000");
+            hose1.setAttribute("stroke-width", "3");
+            group.appendChild(hose1);
+            
+            return group;
+        }
+        
+        // 绘制法兰
+        function drawFlange(x, y, color) {
+            const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            
+            // 法兰盘
+            const flange = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            flange.setAttribute("x", (x - 60).toString());
+            flange.setAttribute("y", y.toString());
+            flange.setAttribute("width", "120");
+            flange.setAttribute("height", "20");
+            flange.setAttribute("fill", color);
+            flange.setAttribute("stroke", "#333");
+            flange.setAttribute("stroke-width", "2");
+            group.appendChild(flange);
+            
+            // 螺栓孔
+            for (let i = 0; i < 6; i++) {
+                const boltHole = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                boltHole.setAttribute("cx", (x - 45 + i * 18).toString());
+                boltHole.setAttribute("cy", (y + 10).toString());
+                boltHole.setAttribute("r", "5");
+                boltHole.setAttribute("fill", "white");
+                boltHole.setAttribute("stroke", "#333");
+                boltHole.setAttribute("stroke-width", "1");
+                group.appendChild(boltHole);
+            }
+            
+            return group;
+        }
+        
+        // 绘制基础
+        function drawFoundation(x, y, color) {
+            const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            
+            // 基础主体
+            const foundation = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            foundation.setAttribute("x", (x - 80).toString());
+            foundation.setAttribute("y", y.toString());
+            foundation.setAttribute("width", "160");
+            foundation.setAttribute("height", "60");
+            foundation.setAttribute("fill", color);
+            foundation.setAttribute("stroke", "#333");
+            foundation.setAttribute("stroke-width", "2");
+            group.appendChild(foundation);
+            
+            // 钢筋示意
+            for (let i = 0; i < 5; i++) {
+                const rebar = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                rebar.setAttribute("x1", (x - 70 + i * 20).toString());
+                rebar.setAttribute("y1", y.toString());
+                rebar.setAttribute("x2", (x - 70 + i * 20).toString());
+                rebar.setAttribute("y2", (y + 60).toString());
+                rebar.setAttribute("stroke", "#333");
+                rebar.setAttribute("stroke-width", "1.5");
+                rebar.setAttribute("stroke-dasharray", "5,3");
+                group.appendChild(rebar);
+            }
+            
+            return group;
+        }
+        
+        // 更新装配状态文本
+        function updateStateText() {
+            const stateText = document.getElementById('state-text');
+            if (stateText) {
+                if (currentStep === 0) {
+                    stateText.textContent = "准备开始装配...";
+                } else if (currentStep === 6) {
+                    stateText.textContent = "装配完成！液压升降防撞柱已就绪。";
+                } else {
+                    stateText.textContent = `正在装配第 ${currentStep} 步: ${partsData[currentStep].name}`;
+                }
+            }
+        }
+        
+        // 选择部件
+        function selectPart(partNumber) {
+            // 更新部件列表高亮
+            partItems.forEach(item => {
+                item.classList.remove('active');
+                if (parseInt(item.getAttribute('data-part')) === partNumber) {
+                    item.classList.add('active');
+                }
+            });
+            
+            // 更新部件详情
+            const part = partsData[partNumber];
+            document.getElementById('current-part-name').textContent = part.name;
+            document.getElementById('current-part-desc').textContent = part.desc;
+            document.getElementById('current-part-material').textContent = part.material;
+            document.getElementById('current-part-function').textContent = part.function;
+            
+            // 高亮对应部件
+            const svgParts = document.querySelectorAll('.part');
+            svgParts.forEach(part => {
+                part.style.filter = 'none';
+            });
+            
+            const selectedPart = document.getElementById(`part-${partNumber}`);
+            if (selectedPart) {
+                selectedPart.style.filter = 'drop-shadow(0 0 8px #3498db)';
+            }
+        }
+        
+        // 更新装配步骤
+        function updateAssemblyStep() {
+            // 更新步骤高亮
+            steps.forEach(step => {
+                step.classList.remove('current-step');
+                if (parseInt(step.getAttribute('data-step')) === currentStep) {
+                    step.classList.add('current-step');
+                }
+            });
+            
+            // 更新部件显示状态
+            const svgParts = document.querySelectorAll('.part');
+            svgParts.forEach(part => {
+                const partNum = parseInt(part.getAttribute('data-part'));
+                if (partNum <= currentStep) {
+                    part.setAttribute("opacity", "1");
+                } else {
+                    part.setAttribute("opacity", "0.3");
+                }
+            });
+            
+            // 更新状态文本
+            updateStateText();
+            
+            // 更新按钮状态
+            prevBtn.disabled = currentStep <= 1;
+            nextBtn.disabled = currentStep >= 6;
+        }
+        
+        // 上一步
+        function prevStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                updateAssemblyStep();
+                selectPart(currentStep);
+            }
+        }
+        
+        // 下一步
+        function nextStep() {
+            if (currentStep < 6) {
+                currentStep++;
+                updateAssemblyStep();
+                selectPart(currentStep);
+            }
+        }
+        
+        // 播放动画
+        function playAnimation() {
+            if (isAnimating) return;
+            
+            isAnimating = true;
+            playBtn.disabled = true;
+            playBtn.textContent = "动画播放中...";
+            
+            // 重置到第一步
+            currentStep = 0;
+            updateAssemblyStep();
+            
+            // 按顺序播放动画
+            let step = 0;
+            const interval = setInterval(() => {
+                step++;
+                currentStep = step;
+                updateAssemblyStep();
+                selectPart(currentStep);
+                
+                if (step >= 6) {
+                    clearInterval(interval);
+                    isAnimating = false;
+                    playBtn.disabled = false;
+                    playBtn.textContent = "播放动画";
+                }
+            }, 1000 - (animationSpeed - 1) * 80);
+        }
+        
+        // 重置
+        function reset() {
+            currentStep = 1;
+            isExploded = false;
+            updateAssemblyStep();
+            selectPart(1);
+            initSVG();
+        }
+        
+        // 切换爆炸视图
+        function toggleExplodedView() {
+            isExploded = !isExploded;
+            explodeBtn.textContent = isExploded ? "组装视图" : "爆炸视图";
+            initSVG();
+            updateAssemblyStep();
+            selectPart(currentStep);
+        }
+        
+        // 更新动画速度
+        function updateSpeed() {
+            animationSpeed = parseInt(speedControl.value);
+            const speedTexts = ["极慢", "很慢", "慢", "较慢", "中速", "较快", "快", "很快", "极快", "最快"];
+            speedValue.textContent = speedTexts[animationSpeed - 1];
+        }
+        
+        // 初始化事件监听
+        function initEvents() {
+            prevBtn.addEventListener('click', prevStep);
+            nextBtn.addEventListener('click', nextStep);
+            playBtn.addEventListener('click', playAnimation);
+            resetBtn.addEventListener('click', reset);
+            explodeBtn.addEventListener('click', toggleExplodedView);
+            speedControl.addEventListener('input', updateSpeed);
+            
+            // 部件列表点击事件
+            partItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    const partNum = parseInt(this.getAttribute('data-part'));
+                    selectPart(partNum);
+                });
+            });
+        }
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initSVG();
+            initEvents();
+            selectPart(1);
+            updateSpeed();
+        });
+    </script>
+</body>
+</html>
